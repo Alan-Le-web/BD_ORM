@@ -21,6 +21,18 @@ create_tables(engine)
 Session = sessionmaker(bind=engine)
 session = Session()
 
+# with open('import/tests_data.json', 'r') as fd:
+#     data = json.load(fd)
+
+# for record in data:
+#     model = {
+#         'publisher': Publisher,
+#         'shop': Shop,
+#         'book': Book,
+#         'stock': Stock,
+#         'sale': Sale,
+#     }[record.get('model')]
+#     session.add(model(id=record.get('pk'), **record.get('fields')))
 
 pub1 = Publisher(name = "Пушкин")
 pub2 = Publisher(name = "Гоголь")
@@ -83,9 +95,37 @@ sale6 = Sale(price = 55, date_sale = "2018-10-29",  stock = stock1, count = 4)
 session.add_all([sale1, sale2, sale3, sale4, sale5, sale6])
 
 
+
+
 session.commit()
 
 
+# for i in session.query(Book).join(Publisher).filter(Publisher.name == autor).all():
+#     print(i)
+
+# запросы
+# q = session.query(Stock).join(Homework.course).filter(Homework.number == 1)
+# print(q)
+# for s in q.all():
+#     print(s.id, s.name)
+#     for hw in s.homeworks:
+#         print("\t", hw.id, hw.number, hw.description)
+
+# # вложенный запрос
+# subq = session.query(Homework).filter(Homework.description.like("%сложн%")).subquery("simple_hw")
+# q = session.query(Course).join(subq, Course.id == subq.c.course_id)
+# print(q)
+# for s in q.all():
+#     print(s.id, s.name)
+#     for hw in s.homeworks:
+#         print("\t", hw.id, hw.number, hw.description),
+
+# results = (session.query(Book.title, Shop.name, Sale.price, Sale.date_sale)
+#            .join(Stock)
+#            .join(Sale)
+#            .join(Publisher)
+#            .filter(Publisher.name == author)
+#            .all())
 print(pub1)
 print(pub2)
 print(pub3)
