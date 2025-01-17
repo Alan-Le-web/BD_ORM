@@ -1,18 +1,25 @@
 import sqlalchemy
+from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 import os.path
-import json
+import pprint
 from pprint import pprint
 from dotenv import load_dotenv
 from models import create_tables, Publisher, Shop, Book, Stock, Sale
-
-
 
 dotenv_path = 'config.env'
 if os.path.exists(dotenv_path):
     load_dotenv(dotenv_path)
 
-DSN = os.getenv("dsn")
+var1 = os.getenv('1')
+var2 = os.getenv('login')
+var3 = os.getenv('pass')
+var4 = os.getenv('ip')
+var5 = os.getenv('port')
+var6 = os.getenv('bd')
+
+DSN = var1+var2+":"+var3+var4+":"+var5+"/"+var6
+print(DSN)
 engine = sqlalchemy.create_engine(DSN)
 
 create_tables(engine)
@@ -59,7 +66,6 @@ session.add(book5)
 session.add(book6)
 
 
-
 stock1 = Stock(shop = shop1, book = book5, count = 10)
 stock2 = Stock(shop = shop1, book = book2, count = 15)
 stock3 = Stock(shop = shop2, book = book1, count = 13)
@@ -75,32 +81,35 @@ session.add_all([stock1, stock2, stock3, stock4, stock5, stock6, stock7, stock8,
 
 
 sale1 = Sale(price = 22, date_sale = "2018-10-24",  stock = stock1, count = 2)
-sale2 = Sale(price = 12, date_sale = "2018-10-27",  stock = stock1, count = 1)
-sale3 = Sale(price = 44, date_sale = "2018-10-26",  stock = stock1, count = 3)
-sale4 = Sale(price = 234, date_sale = "2018-10-20",  stock = stock1, count = 8)
-sale5 = Sale(price = 41, date_sale = "2018-10-22",  stock = stock1, count = 3)
-sale6 = Sale(price = 55, date_sale = "2018-10-29",  stock = stock1, count = 4)
+sale2 = Sale(price = 12, date_sale = "2018-10-27",  stock = stock2, count = 1)
+sale3 = Sale(price = 44, date_sale = "2018-10-26",  stock = stock3, count = 3)
+sale4 = Sale(price = 234, date_sale = "2018-10-20",  stock = stock5, count = 8)
+sale5 = Sale(price = 41, date_sale = "2018-10-22",  stock = stock8, count = 3)
+sale6 = Sale(price = 55, date_sale = "2018-10-29",  stock = stock9, count = 4)
 session.add_all([sale1, sale2, sale3, sale4, sale5, sale6])
-
 
 session.commit()
 
+author = input("Введите имя автора: ")
 
-print(pub1)
-print(pub2)
-print(pub3)
-print(pub4)
-print(pub5)
-# author = input("Введите имя автора: ")
-author = "Пушкин"
-results = (session.query(Book.title, Shop.name, Sale.price, Sale.date_sale)
-           .join(Stock)
-           .join(Sale)
-           .join(Publisher)
-           .filter(Publisher.name == author)
-           .all())
-# Вывод результата
-for title, shop_name, price, date in results:
-    print(f"{title} | {shop_name} | {price} | {date.strftime('%Y-%m-%d')}")
+print('Автор: ', author)
+pub = session.query(Publisher).filter(Publisher.name == author).first()
+if pub:
+        
+    subq = session.query(Publisher).filter(Publisher.name == author).subquery()
 
-session.close()
+    results = session.query(Stock, Sale). \
+        join(Book, Stock.book_id == Book.id). \
+        join(subq, Book.publisher_id == subq.c.id). \
+        outerjoin(Sale, Sale.stock_id == Stock.id). \
+        all()
+
+    for stock, sale in results:
+        if sale:
+            print(f'Книга: {stock.book.title} | Магазин: {stock.shop.name} | Цена: {sale.price} | Дата: {sale.date_sale}')
+        else:
+            print(f'Книга: {stock.book.title} | Магазин: {stock.shop.name} | Нет продаж')
+    session.close()
+else:
+    print(f"Автор {author} не найден.")            
+    
