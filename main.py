@@ -19,7 +19,6 @@ var5 = os.getenv('port')
 var6 = os.getenv('bd')
 
 DSN = var1+var2+":"+var3+var4+":"+var5+"/"+var6
-print(DSN)
 engine = sqlalchemy.create_engine(DSN)
 
 create_tables(engine)
@@ -90,26 +89,48 @@ session.add_all([sale1, sale2, sale3, sale4, sale5, sale6])
 
 session.commit()
 
-author = input("Введите имя автора: ")
+# author = input("Введите имя автора: ")
 
-print('Автор: ', author)
-pub = session.query(Publisher).filter(Publisher.name == author).first()
-if pub:
+# print('Автор: ', author)
+# pub = session.query(Publisher).filter(Publisher.name == author).first()
+# if pub:
         
-    subq = session.query(Publisher).filter(Publisher.name == author).subquery()
+#     subq = session.query(Publisher).filter(Publisher.name == author).subquery()
 
-    results = session.query(Stock, Sale). \
-        join(Book, Stock.book_id == Book.id). \
-        join(subq, Book.publisher_id == subq.c.id). \
-        outerjoin(Sale, Sale.stock_id == Stock.id). \
-        all()
+#     results = session.query(Stock, Sale). \
+#         join(Book, Stock.book_id == Book.id). \
+#         join(subq, Book.publisher_id == subq.c.id). \
+#         outerjoin(Sale, Sale.stock_id == Stock.id). \
+#         all()
 
-    for stock, sale in results:
-        if sale:
-            print(f'Книга: {stock.book.title} | Магазин: {stock.shop.name} | Цена: {sale.price} | Дата: {sale.date_sale}')
-        else:
-            print(f'Книга: {stock.book.title} | Магазин: {stock.shop.name} | Нет продаж')
+#     for stock, sale in results:
+#         if sale:
+#             print(f'Книга: {stock.book.title} | Магазин: {stock.shop.name} | Цена: {sale.price} | Дата: {sale.date_sale}')
+#         else:
+#             print(f'Книга: {stock.book.title} | Магазин: {stock.shop.name} | Нет продаж')
+#     session.close()
+# else:
+#     print(f"Автор {author} не найден.")            
+
+
+
+
+def get_shops(id_or_name): #Функция принимает обязательный параметр
+    xxx = session.query(Book.title, Shop.name, Sale.price, Sale.date_sale).select_from(Shop).\
+        join(Stock).\
+        join(Book).\
+        join(Publisher).\
+        join(Sale)
+
+    if id_or_name.isdigit(): #Проверяем переданные данные в функцию на то, что строка состоит только из чисел
+        results = xxx.filter(Publisher.id == id_or_name).all()
+    else:
+        results = xxx.filter(Publisher.name == id_or_name).all()
+
+    for title, shop_name, price, date in results:
+        print(f"{title} | {shop_name} | {price} | {date.strftime('%d-%m-%Y')}") 
     session.close()
-else:
-    print(f"Автор {author} не найден.")            
-    
+
+if __name__ == '__main__':
+    user_input = input("Введите ID или имя автора: ")  # Запрашиваем входные данные
+    get_shops(user_input) 
